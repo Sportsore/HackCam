@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعداد بيانات المستخدم</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>إعداد البوت الخاص بك</h1>
+    <form id="setupForm">
+        <label for="botToken">توكن البوت:</label><br>
+        <input type="text" id="botToken" placeholder="أدخل التوكن الخاص بالبوت" required><br>
+        <label for="chatId">معرّف المحادثة (Chat ID):</label><br>
+        <input type="text" id="chatId" placeholder="أدخل معرف المحادثة" required><br>
+        <button type="submit">إنشاء الرابط</button>
+    </form>
+    <div id="result" style="margin-top: 20px; font-weight: bold;"></div>
+
+    <script>
+        document.getElementById("setupForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const botToken = document.getElementById("botToken").value.trim();
+            const chatId = document.getElementById("chatId").value.trim();
+
+            if (botToken && chatId) {
+                const encodedToken = encodeURIComponent(botToken);
+                const encodedChatId = encodeURIComponent(chatId);
+                const customLink = `${window.location.origin}/main.html?token=${encodedToken}&chat_id=${encodedChatId}`;
+                
+                document.getElementById("result").innerHTML = `
+                    رابطك المخصص: <br>
+                    <a href="${customLink}" target="_blank">${customLink}</a>
+                `;
+            } else {
+                alert("يرجى ملء جميع الحقول.");
+            }
+        });
+    </script>
+</body>
+</html>
